@@ -1,21 +1,85 @@
-//
-//  ContentView.swift
-//  FocusBuddy
-//
-//  Created by Dave Rosales on 7/11/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    @State private var timeRemaining = 25 * 60
+    @State private var timerActive = false
+    @State private var timer: Timer?
+    @State private var progress: CGFloat = 1.0
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        VStack(spacing: 30) {
+            Text("Focus Buddy")
+                .font(.largeTitle)
+                .fontWeight(.heavy)
+                .foregroundStyle(
+                    LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                )
+
+            ZStack {
+                Circle()
+                    .stroke(lineWidth: 20)
+                    .opacity(0.3)
+                    .foregroundColor(.gray)
+
+                Circle()
+                    .trim(from: 0.0, to: progress)
+                    .stroke(
+                        AngularGradient(gradient: Gradient(colors: [.green, .yellow, .orange, .red]), center: .center),
+                        style: StrokeStyle(lineWidth: 20, lineCap: .round)
+                    )
+                    .rotationEffect(Angle(degrees: -90))
+                    .animation(.easeInOut(duration: 0.5), value: progress)
+
+                Text(formattedTime())
+                    .font(.system(size: 50, weight: .medium, design: .rounded))
+                    .monospacedDigit()
+            }
+            .frame(width: 250, height: 250)
+
+            Button(action: toggleTimer) {
+                Text(timerActive ? "Detener" : "Iniciar")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .padding()
+                    .frame(width: 200)
+                    .background(timerActive ? Color.red : Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(15)
+                    .shadow(radius: 10)
+            }
         }
         .padding()
+        .onAppear {
+            updateProgress()
+        }
+    }
+
+    func formattedTime() -> String {
+        let minutes = timeRemaining / 60
+        let seconds = timeRemaining % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    func toggleTimer() {
+        timerActive.toggle()
+
+        if timerActive {
+            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                if timeRemaining > 0 {
+                    timeRemaining -= 1
+                    updateProgress()
+                } else {
+                    timer?.invalidate()
+                    timerActive = false
+                }
+            }
+        } else {
+            timer?.invalidate()
+        }
+    }
+
+    func updateProgress() {
+        progress = CGFloat(timeRemaining) / CGFloat(25 * 60)
     }
 }
 
