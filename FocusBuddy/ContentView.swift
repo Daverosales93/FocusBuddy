@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ContentView: View {
     @State private var timeRemaining = 25 * 60
@@ -8,12 +9,21 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 30) {
-            Text("Focus Buddy")
-                .font(.largeTitle)
-                .fontWeight(.heavy)
-                .foregroundStyle(
-                    LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
-                )
+            Image("FocusBuddyLogoTimer")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 300, height: 150)
+            // Text("Focus Buddy Timer")
+            //     .font(.system(size: 50, weight: .black, design: .default))
+            //     .italic()
+            //     .foregroundStyle(
+            //         LinearGradient(colors: [Color.blue, Color.black], startPoint: .leading, endPoint: .trailing)
+            //     )
+            //     .shadow(color: .black.opacity(0.7), radius: 6, x: 2, y: 2)
+            
+            Text("Stay Focused, Beat Procrastination!")
+                .font(.headline)
+                .foregroundColor(.gray)
 
             ZStack {
                 Circle()
@@ -47,6 +57,8 @@ struct ContentView: View {
                     .cornerRadius(15)
                     .shadow(radius: 10)
             }
+            .scaleEffect(timerActive ? 1.1 : 1.0)
+            .animation(.spring(response: 0.4, dampingFraction: 0.5), value: timerActive)
         }
         .padding()
         .onAppear {
@@ -61,6 +73,9 @@ struct ContentView: View {
     }
 
     func toggleTimer() {
+        let impact = UIImpactFeedbackGenerator(style: .medium)
+        impact.impactOccurred()
+        
         timerActive.toggle()
 
         if timerActive {
