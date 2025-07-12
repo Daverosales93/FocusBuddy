@@ -1,11 +1,17 @@
 import SwiftUI
 import UIKit
+import AudioToolbox
 
 struct ContentView: View {
     @State private var timeRemaining = 25 * 60
     @State private var timerActive = false
     @State private var timer: Timer?
     @State private var progress: CGFloat = 1.0
+    @State private var motivationalMessage = ""
+
+    let messages = [
+        "Stay Focused!", "Keep Going!", "You're Doing Great!", "Almost There!", "Well Done! Take a Break!"
+    ]
 
     var body: some View {
         VStack(spacing: 30) {
@@ -13,15 +19,8 @@ struct ContentView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 300, height: 150)
-            // Text("Focus Buddy Timer")
-            //     .font(.system(size: 50, weight: .black, design: .default))
-            //     .italic()
-            //     .foregroundStyle(
-            //         LinearGradient(colors: [Color.blue, Color.black], startPoint: .leading, endPoint: .trailing)
-            //     )
-            //     .shadow(color: .black.opacity(0.7), radius: 6, x: 2, y: 2)
-            
-            Text("Stay Focused, Beat Procrastination!")
+
+            Text(motivationalMessage)
                 .font(.headline)
                 .foregroundColor(.gray)
 
@@ -46,23 +45,38 @@ struct ContentView: View {
             }
             .frame(width: 250, height: 250)
 
-            Button(action: toggleTimer) {
-                Text(timerActive ? "Detener" : "Iniciar")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .padding()
-                    .frame(width: 200)
-                    .background(timerActive ? Color.red : Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(15)
-                    .shadow(radius: 10)
+            HStack(spacing: 20) {
+                Button(action: toggleTimer) {
+                    Text(timerActive ? "Stop" : "Start")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding()
+                        .frame(width: 150)
+                        .background(timerActive ? Color.red : Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(15)
+                        .shadow(radius: 10)
+                }
+                .scaleEffect(timerActive ? 1.1 : 1.0)
+                .animation(.spring(response: 0.4, dampingFraction: 0.5), value: timerActive)
+
+                Button(action: resetTimer) {
+                    Text("Reset")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding()
+                        .frame(width: 150)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(15)
+                        .shadow(radius: 10)
+                }
             }
-            .scaleEffect(timerActive ? 1.1 : 1.0)
-            .animation(.spring(response: 0.4, dampingFraction: 0.5), value: timerActive)
         }
         .padding()
         .onAppear {
             updateProgress()
+            updateMessage()
         }
     }
 
@@ -75,7 +89,7 @@ struct ContentView: View {
     func toggleTimer() {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
-        
+
         timerActive.toggle()
 
         if timerActive {
@@ -83,9 +97,12 @@ struct ContentView: View {
                 if timeRemaining > 0 {
                     timeRemaining -= 1
                     updateProgress()
+                    updateMessage()
                 } else {
                     timer?.invalidate()
                     timerActive = false
+                    motivationalMessage = "Session Complete! Well Done!"
+                    playCompletionSound()
                 }
             }
         } else {
@@ -93,8 +110,27 @@ struct ContentView: View {
         }
     }
 
+    func resetTimer() {
+        timer?.invalidate()
+        timeRemaining = 25 * 60
+        timerActive = false
+        updateProgress()
+        updateMessage()
+    }
+
     func updateProgress() {
         progress = CGFloat(timeRemaining) / CGFloat(25 * 60)
+    }
+
+    func updateMessage() {
+        let index = max(0, messages.count - Int(Double(timeRemaining) / 60.0 / 5.0) - 1)
+        motivationalMessage = messages[min(index, messages.count - 1)]
+    }
+
+    func playCompletionSound() {
+        let impact = UIImpactFeedbackGenerator(style: .heavy)
+        impact.impactOccurred()
+        AudioServicesPlaySystemSound(1005)
     }
 }
 
